@@ -5,21 +5,21 @@ import { useStore } from "@/lib/store";
 import { CheckCircle, Circle, Star, Plus, Trash2, ChevronDown, ChevronUp } from "lucide-react";
 import type { Task } from "@/lib/types";
 
+const cats = [
+  { v: "routine", l: "روتينية", c: "var(--accent)" },
+  { v: "chore", l: "منزلية", c: "var(--green)" },
+  { v: "homework", l: "واجبات", c: "var(--orange)" },
+  { v: "behavior", l: "سلوك", c: "var(--pink)" },
+  { v: "custom", l: "أخرى", c: "var(--text2)" },
+];
+
 export default function TasksPage() {
   const { state, addTask, removeTask, completeTask, undoCompleteTask, isTaskCompletedOnDate } = useStore();
   const [showForm, setShowForm] = useState(false);
   const [expanded, setExpanded] = useState<string | null>(null);
-  const [fMember, setFMember] = useState("all");
+  const [fMem, setFMem] = useState("all");
   const [fCat, setFCat] = useState("all");
   const today = new Date().toISOString().split("T")[0];
-
-  const cats = [
-    { v: "routine", l: "روتينية", c: "var(--accent)" },
-    { v: "chore", l: "منزلية", c: "var(--green)" },
-    { v: "homework", l: "واجبات", c: "var(--orange)" },
-    { v: "behavior", l: "سلوك", c: "var(--accent2)" },
-    { v: "custom", l: "أخرى", c: "var(--text2)" },
-  ];
 
   const [f, setF] = useState({
     title: "", description: "", points: 10,
@@ -30,12 +30,12 @@ export default function TasksPage() {
 
   const tasks = state.tasks.filter((t) => {
     if (!t.active) return false;
-    if (fMember !== "all" && !t.assignedTo.includes(fMember)) return false;
+    if (fMem !== "all" && !t.assignedTo.includes(fMem)) return false;
     if (fCat !== "all" && t.category !== fCat) return false;
     return true;
   });
 
-  const add = () => {
+  const submit = () => {
     if (!f.title.trim()) return;
     addTask(f);
     setF({ title: "", description: "", points: 10, category: "routine", frequency: "daily", assignedTo: [] });
@@ -43,44 +43,42 @@ export default function TasksPage() {
   };
 
   return (
-    <div className="space-y-3 anim">
+    <div className="space-y-4 anim">
       <div className="flex items-center justify-between">
-        <h1 className="text-lg font-bold">المهام</h1>
-        <button onClick={() => setShowForm(!showForm)} className="btn btn-primary text-xs px-4 py-2">
+        <h1 className="title">المهام</h1>
+        <button onClick={() => setShowForm(!showForm)} className="btn btn-primary btn-sm">
           <Plus size={14} /> جديد
         </button>
       </div>
 
-      {/* Filters */}
-      <div className="flex gap-1.5 overflow-x-auto pb-1 -mx-1 px-1" style={{ scrollbarWidth: "none" }}>
-        <button onClick={() => setFMember("all")} className={`chip ${fMember === "all" ? "on" : ""}`}>الكل</button>
+      <div className="chip-scroll">
+        <button onClick={() => setFMem("all")} className={`chip ${fMem === "all" ? "on" : ""}`}>الكل</button>
         {state.familyMembers.map((m) => (
-          <button key={m.id} onClick={() => setFMember(m.id)} className={`chip ${fMember === m.id ? "on" : ""}`}>
+          <button key={m.id} onClick={() => setFMem(m.id)} className={`chip ${fMem === m.id ? "on" : ""}`}>
             {m.icon || m.name.charAt(0)} {m.name}
           </button>
         ))}
       </div>
 
-      <div className="flex gap-1.5 overflow-x-auto pb-1 -mx-1 px-1" style={{ scrollbarWidth: "none" }}>
+      <div className="chip-scroll">
         <button onClick={() => setFCat("all")} className={`chip ${fCat === "all" ? "on" : ""}`}>كل الفئات</button>
         {cats.map((c) => (
           <button key={c.v} onClick={() => setFCat(c.v)} className={`chip ${fCat === c.v ? "on" : ""}`}>{c.l}</button>
         ))}
       </div>
 
-      {/* Form */}
       {showForm && (
-        <div className="glass p-4 anim-scale" style={{ borderColor: "rgba(124,108,255,0.3)" }}>
+        <div className="card anim" style={{ borderColor: "rgba(139,92,246,0.25)" }}>
           <div className="space-y-3">
             <input className="input" placeholder="عنوان المهمة" value={f.title} onChange={(e) => setF((p) => ({ ...p, title: e.target.value }))} />
             <textarea className="input" placeholder="الوصف (اختياري)" rows={2} value={f.description} onChange={(e) => setF((p) => ({ ...p, description: e.target.value }))} />
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-[10px] mb-1 block" style={{ color: "var(--text2)" }}>النقاط</label>
+                <label className="label mb-1.5 block">النقاط</label>
                 <input className="input" type="number" min={1} value={f.points} onChange={(e) => setF((p) => ({ ...p, points: +e.target.value }))} />
               </div>
               <div>
-                <label className="text-[10px] mb-1 block" style={{ color: "var(--text2)" }}>الفئة</label>
+                <label className="label mb-1.5 block">الفئة</label>
                 <select className="select" value={f.category} onChange={(e) => setF((p) => ({ ...p, category: e.target.value as Task["category"] }))}>
                   {cats.map((c) => <option key={c.v} value={c.v}>{c.l}</option>)}
                 </select>
@@ -92,8 +90,8 @@ export default function TasksPage() {
               <option value="once">مرة واحدة</option>
             </select>
             <div>
-              <label className="text-[10px] mb-1 block" style={{ color: "var(--text2)" }}>تعيين إلى</label>
-              <div className="flex gap-1.5 flex-wrap">
+              <label className="label mb-2 block">تعيين إلى</label>
+              <div className="chip-scroll">
                 {state.familyMembers.map((m) => (
                   <button key={m.id} onClick={() => setF((p) => ({
                     ...p, assignedTo: p.assignedTo.includes(m.id) ? p.assignedTo.filter((x) => x !== m.id) : [...p.assignedTo, m.id],
@@ -103,20 +101,22 @@ export default function TasksPage() {
                 ))}
               </div>
             </div>
-            <div className="flex gap-2">
-              <button onClick={add} className="btn btn-primary flex-1 text-sm">حفظ</button>
-              <button onClick={() => setShowForm(false)} className="btn btn-ghost text-sm">إلغاء</button>
+            <div className="flex gap-2 pt-1">
+              <button onClick={submit} className="btn btn-primary flex-1">حفظ</button>
+              <button onClick={() => setShowForm(false)} className="btn btn-ghost">إلغاء</button>
             </div>
           </div>
         </div>
       )}
 
-      {/* List */}
-      <div className="space-y-2">
+      <div className="space-y-2.5">
         {tasks.length === 0 ? (
-          <div className="glass-sm p-8 text-center">
-            <p className="text-2xl mb-1">📋</p>
-            <p className="text-xs" style={{ color: "var(--text2)" }}>لا توجد مهام</p>
+          <div className="card-sm text-center py-10">
+            <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-3" style={{ background: "var(--accent-dim)" }}>
+              <CheckCircle size={24} style={{ color: "var(--accent)" }} />
+            </div>
+            <p className="text-sm font-bold mb-0.5">لا توجد مهام</p>
+            <p className="text-xs" style={{ color: "var(--text2)" }}>أضف مهمة جديدة للبدء</p>
           </div>
         ) : tasks.map((t, i) => {
           const exp = expanded === t.id;
@@ -125,45 +125,43 @@ export default function TasksPage() {
           const done = mId ? isTaskCompletedOnDate(t.id, mId, today) : false;
 
           return (
-            <div key={t.id} className={`glass-sm p-3 anim-d${Math.min(i + 1, 5)}`}>
-              <div className="flex items-center gap-2.5">
-                <button
-                  onClick={() => mId && (done ? undoCompleteTask(t.id, mId) : completeTask(t.id, mId))}
+            <div key={t.id} className={`card-sm anim${Math.min(i + 1, 5)}`}>
+              <div className="flex items-center gap-3">
+                <button onClick={() => mId && (done ? undoCompleteTask(t.id, mId) : completeTask(t.id, mId))}
                   className="bg-transparent border-none p-0 cursor-pointer shrink-0"
-                  style={{ color: done ? "var(--green)" : "var(--text2)" }}
-                >
-                  {done ? <CheckCircle size={20} /> : <Circle size={20} />}
+                  style={{ color: done ? "var(--green)" : "var(--text3)" }}>
+                  {done ? <CheckCircle size={22} /> : <Circle size={22} />}
                 </button>
                 <div className="flex-1 min-w-0">
-                  <span className="text-sm font-semibold block truncate"
-                    style={{ textDecoration: done ? "line-through" : "none", opacity: done ? 0.4 : 1 }}>
+                  <p className="text-[15px] font-bold truncate"
+                    style={{ textDecoration: done ? "line-through" : "none", opacity: done ? 0.35 : 1 }}>
                     {t.title}
-                  </span>
-                  {t.description && <p className="text-[10px] truncate mt-0.5" style={{ color: "var(--text2)" }}>{t.description}</p>}
+                  </p>
+                  {t.description && <p className="text-xs truncate mt-0.5" style={{ color: "var(--text2)" }}>{t.description}</p>}
                 </div>
-                <div className="flex items-center gap-1.5 shrink-0">
-                  <span className="badge" style={{ background: `${cat?.c}15`, color: cat?.c }}>{cat?.l}</span>
+                <div className="flex items-center gap-2 shrink-0">
+                  <span className="badge" style={{ background: `${cat?.c}18`, color: cat?.c }}>{cat?.l}</span>
                   <div className="flex items-center gap-0.5">
-                    <Star size={10} fill="var(--orange)" style={{ color: "var(--orange)" }} />
-                    <span className="text-[11px] font-bold" style={{ color: "var(--orange)" }}>{t.points}</span>
+                    <Star size={11} fill="var(--orange)" style={{ color: "var(--orange)" }} />
+                    <span className="text-xs font-extrabold" style={{ color: "var(--orange)" }}>{t.points}</span>
                   </div>
-                  <button onClick={() => setExpanded(exp ? null : t.id)} className="bg-transparent border-none p-0 cursor-pointer" style={{ color: "var(--text2)" }}>
-                    {exp ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                  <button onClick={() => setExpanded(exp ? null : t.id)} className="bg-transparent border-none p-0 cursor-pointer" style={{ color: "var(--text3)" }}>
+                    {exp ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                   </button>
                 </div>
               </div>
 
               {exp && (
-                <div className="mt-2.5 pt-2.5 space-y-2" style={{ borderTop: "0.5px solid rgba(255,255,255,0.06)" }}>
-                  <div className="flex gap-1 flex-wrap">
+                <div className="mt-3 pt-3 space-y-2.5" style={{ borderTop: "1px solid var(--border)" }}>
+                  <div className="flex gap-1.5 flex-wrap">
                     {t.assignedTo.map((id) => {
                       const m = state.familyMembers.find((x) => x.id === id);
-                      return m ? <span key={id} className="badge" style={{ background: `${m.color || "var(--accent)"}15`, color: m.color || "var(--accent)" }}>{m.icon || m.name.charAt(0)} {m.name}</span> : null;
+                      return m ? <span key={id} className="badge" style={{ background: `${m.color || "var(--accent)"}18`, color: m.color || "var(--accent)" }}>{m.icon || m.name.charAt(0)} {m.name}</span> : null;
                     })}
-                    {!t.assignedTo.length && <span className="text-[10px]" style={{ color: "var(--text2)" }}>غير مُعيّنة</span>}
+                    {!t.assignedTo.length && <span className="text-xs" style={{ color: "var(--text3)" }}>غير مُعيّنة</span>}
                   </div>
-                  <button onClick={() => removeTask(t.id)} className="btn btn-danger text-xs py-1.5 px-3">
-                    <Trash2 size={11} /> حذف
+                  <button onClick={() => removeTask(t.id)} className="btn btn-danger btn-sm">
+                    <Trash2 size={12} /> حذف
                   </button>
                 </div>
               )}
