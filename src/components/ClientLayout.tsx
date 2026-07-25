@@ -8,9 +8,7 @@ export default function ClientLayout({ children }: { children: ReactNode }) {
   return (
     <StoreProvider>
       <Navbar />
-      <main className="p-4 pb-20 md:pb-4 pt-16 max-w-5xl mx-auto min-h-screen">
-        {children}
-      </main>
+      <main className="page min-h-dvh">{children}</main>
     </StoreProvider>
   );
 }

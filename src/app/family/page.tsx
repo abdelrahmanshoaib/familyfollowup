@@ -8,90 +8,87 @@ import IconPicker from "@/components/IconPicker";
 export default function FamilyPage() {
   const { state, addFamilyMember, updateFamilyMember, removeFamilyMember } = useStore();
   const [showForm, setShowForm] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [showIconPicker, setShowIconPicker] = useState(false);
-  const [iconTarget, setIconTarget] = useState<"new" | "edit">("new");
+  const [editId, setEditId] = useState<string | null>(null);
+  const [showPicker, setShowPicker] = useState(false);
+  const [pickerTarget, setPickerTarget] = useState<"new" | "edit">("new");
 
-  const colors = ["#7c6cff", "#ff6b9d", "#00d4aa", "#ffb347", "#74b9ff", "#a29bfe", "#fd79a8", "#00cec9", "#e17055", "#0984e3"];
+  const colors = ["#7c6cff", "#ff6b9d", "#34d399", "#fb923c", "#60a5fa", "#a78bfa", "#f472b6", "#2dd4bf", "#e879f9", "#38bdf8"];
+  const [f, setF] = useState({ name: "", role: "child" as "parent" | "child", color: "#7c6cff", icon: "" });
+  const [ef, setEf] = useState({ name: "", role: "child" as "parent" | "child", color: "#7c6cff", icon: "" });
 
-  const [form, setForm] = useState({ name: "", role: "child" as "parent" | "child", color: "#7c6cff", icon: "" });
-  const [editForm, setEditForm] = useState({ name: "", role: "child" as "parent" | "child", color: "#7c6cff", icon: "" });
-
-  const handleAdd = () => {
-    if (!form.name.trim()) return;
-    addFamilyMember({ name: form.name, role: form.role, avatar: form.icon || form.name.charAt(0), color: form.color, icon: form.icon });
-    setForm({ name: "", role: "child", color: "#7c6cff", icon: "" });
+  const add = () => {
+    if (!f.name.trim()) return;
+    addFamilyMember({ name: f.name, role: f.role, avatar: f.icon || f.name.charAt(0), color: f.color, icon: f.icon });
+    setF({ name: "", role: "child", color: "#7c6cff", icon: "" });
     setShowForm(false);
   };
 
+  const save = () => {
+    if (!editId || !ef.name.trim()) return;
+    updateFamilyMember(editId, { name: ef.name, role: ef.role, avatar: ef.icon || ef.name.charAt(0), color: ef.color, icon: ef.icon });
+    setEditId(null);
+  };
+
   const startEdit = (m: typeof state.familyMembers[0]) => {
-    setEditingId(m.id);
-    setEditForm({ name: m.name, role: m.role, color: m.color || "#7c6cff", icon: m.icon || "" });
+    setEditId(m.id);
+    setEf({ name: m.name, role: m.role, color: m.color || "#7c6cff", icon: m.icon || "" });
   };
 
-  const saveEdit = () => {
-    if (!editingId || !editForm.name.trim()) return;
-    updateFamilyMember(editingId, { name: editForm.name, role: editForm.role, avatar: editForm.icon || editForm.name.charAt(0), color: editForm.color, icon: editForm.icon });
-    setEditingId(null);
-  };
-
-  const parents = state.familyMembers.filter((m) => m.role === "parent");
-  const children = state.familyMembers.filter((m) => m.role === "child");
-
-  const ColorPicker = ({ value, onChange }: { value: string; onChange: (c: string) => void }) => (
+  const Dots = ({ value, onChange }: { value: string; onChange: (c: string) => void }) => (
     <div className="flex gap-1.5 flex-wrap">
       {colors.map((c) => (
         <button key={c} onClick={() => onChange(c)} className="w-6 h-6 rounded-full cursor-pointer border-2 transition-transform"
-          style={{ background: c, borderColor: value === c ? "white" : "transparent", transform: value === c ? "scale(1.15)" : "scale(1)" }} />
+          style={{ background: c, borderColor: value === c ? "#fff" : "transparent", transform: value === c ? "scale(1.15)" : "scale(1)" }} />
       ))}
     </div>
   );
 
-  const MemberCard = ({ m, i }: { m: typeof state.familyMembers[0]; i: number }) => {
-    const editing = editingId === m.id;
+  const parents = state.familyMembers.filter((m) => m.role === "parent");
+  const children = state.familyMembers.filter((m) => m.role === "child");
+
+  const Card = ({ m, i }: { m: typeof state.familyMembers[0]; i: number }) => {
+    const editing = editId === m.id;
 
     if (editing) {
       return (
-        <div className={`card animate-in`} style={{ border: `1px solid ${editForm.color}` }}>
-          <div className="space-y-3">
-            <div className="flex items-center gap-3">
-              <button onClick={() => { setIconTarget("edit"); setShowIconPicker(true); }} className="avatar cursor-pointer border-none"
-                style={{ width: 44, height: 44, background: editForm.color, fontSize: "1.2rem" }}>
-                {editForm.icon || editForm.name.charAt(0) || "?"}
-              </button>
-              <input className="input flex-1" value={editForm.name} onChange={(e) => setEditForm((p) => ({ ...p, name: e.target.value }))} placeholder="الاسم" />
-            </div>
-            <ColorPicker value={editForm.color} onChange={(c) => setEditForm((p) => ({ ...p, color: c }))} />
-            <div className="flex gap-2">
-              <button onClick={saveEdit} className="btn btn-success flex-1 text-xs py-1.5"><Check size={12} /> حفظ</button>
-              <button onClick={() => setEditingId(null)} className="btn btn-secondary text-xs py-1.5"><X size={12} /></button>
-              <button onClick={() => { removeFamilyMember(m.id); setEditingId(null); }} className="btn btn-danger text-xs py-1.5 px-2"><Trash2 size={12} /></button>
-            </div>
+        <div className="glass p-3 anim-scale">
+          <div className="flex items-center gap-2.5 mb-2.5">
+            <button onClick={() => { setPickerTarget("edit"); setShowPicker(true); }}
+              className="avatar cursor-pointer border-none" style={{ width: 40, height: 40, background: ef.color, fontSize: "1.1rem" }}>
+              {ef.icon || ef.name.charAt(0) || "?"}
+            </button>
+            <input className="input flex-1 text-sm" value={ef.name} onChange={(e) => setEf((p) => ({ ...p, name: e.target.value }))} placeholder="الاسم" />
+          </div>
+          <Dots value={ef.color} onChange={(c) => setEf((p) => ({ ...p, color: c }))} />
+          <div className="flex gap-1.5 mt-2.5">
+            <button onClick={save} className="btn btn-success flex-1 text-xs py-1.5"><Check size={11} /> حفظ</button>
+            <button onClick={() => setEditId(null)} className="btn btn-ghost text-xs py-1.5"><X size={11} /></button>
+            <button onClick={() => { removeFamilyMember(m.id); setEditId(null); }} className="btn btn-danger text-xs py-1.5 px-2"><Trash2 size={11} /></button>
           </div>
         </div>
       );
     }
 
     return (
-      <div className={`card animate-in-${Math.min(i + 1, 5)}`} style={{ borderRight: `3px solid ${m.color || "var(--accent)"}` }}>
-        <div className="flex items-center gap-3">
-          <div className="avatar w-11 h-11 text-sm" style={{ background: m.color || "var(--accent)" }}>
+      <div className={`glass-sm p-3 anim-d${Math.min(i + 1, 5)}`} style={{ borderRight: `3px solid ${m.color || "var(--accent)"}` }}>
+        <div className="flex items-center gap-2.5">
+          <div className="avatar w-10 h-10 text-xs" style={{ background: m.color || "var(--accent)" }}>
             {m.icon || m.name.charAt(0)}
           </div>
           <div className="flex-1 min-w-0">
-            <h3 className="font-bold text-sm">{m.name}</h3>
-            <p className="text-xs" style={{ color: "var(--text-secondary)" }}>{m.role === "parent" ? "والد/ة" : "طفل/ة"}</p>
-            <div className="flex items-center gap-1 mt-0.5">
-              <Trophy size={11} style={{ color: "#ffb347" }} />
-              <span className="text-xs font-bold" style={{ color: "#ffb347" }}>{m.points.toLocaleString("ar")}</span>
+            <h3 className="text-sm font-bold truncate">{m.name}</h3>
+            <p className="text-[10px]" style={{ color: "var(--text2)" }}>{m.role === "parent" ? "والد/ة" : "طفل/ة"}</p>
+            <div className="flex items-center gap-0.5 mt-0.5">
+              <Trophy size={10} style={{ color: "var(--orange)" }} />
+              <span className="text-[10px] font-bold" style={{ color: "var(--orange)" }}>{m.points.toLocaleString("ar")}</span>
             </div>
           </div>
-          <div className="flex gap-0.5">
-            <button onClick={() => startEdit(m)} className="p-1.5 rounded-lg bg-transparent border-none cursor-pointer" style={{ color: "var(--text-secondary)" }}>
-              <Edit3 size={14} />
+          <div className="flex gap-0.5 shrink-0">
+            <button onClick={() => startEdit(m)} className="p-1.5 rounded-lg bg-transparent border-none cursor-pointer" style={{ color: "var(--text2)" }}>
+              <Edit3 size={13} />
             </button>
-            <button onClick={() => removeFamilyMember(m.id)} className="p-1.5 rounded-lg bg-transparent border-none cursor-pointer" style={{ color: "var(--danger)" }}>
-              <Trash2 size={14} />
+            <button onClick={() => removeFamilyMember(m.id)} className="p-1.5 rounded-lg bg-transparent border-none cursor-pointer" style={{ color: "var(--red)" }}>
+              <Trash2 size={13} />
             </button>
           </div>
         </div>
@@ -100,44 +97,44 @@ export default function FamilyPage() {
   };
 
   return (
-    <div className="space-y-5 animate-in">
+    <div className="space-y-4 anim">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold">أعضاء الأسرة</h1>
-        <button onClick={() => setShowForm(!showForm)} className="btn btn-primary">
-          <Plus size={16} /> جديد
+        <h1 className="text-lg font-bold">أعضاء الأسرة</h1>
+        <button onClick={() => setShowForm(!showForm)} className="btn btn-primary text-xs px-4 py-2">
+          <Plus size={14} /> جديد
         </button>
       </div>
 
       {showForm && (
-        <div className="card animate-in" style={{ borderColor: "var(--accent)" }}>
+        <div className="glass p-4 anim-scale" style={{ borderColor: "rgba(124,108,255,0.3)" }}>
           <div className="space-y-3">
             <div className="flex items-center gap-3">
-              <button onClick={() => { setIconTarget("new"); setShowIconPicker(true); }} className="avatar cursor-pointer border-none"
-                style={{ width: 52, height: 52, background: form.color, fontSize: "1.4rem" }}>
-                {form.icon || form.name.charAt(0) || "?"}
+              <button onClick={() => { setPickerTarget("new"); setShowPicker(true); }}
+                className="avatar cursor-pointer border-none" style={{ width: 48, height: 48, background: f.color, fontSize: "1.3rem" }}>
+                {f.icon || f.name.charAt(0) || "?"}
               </button>
               <div>
                 <p className="text-sm font-semibold">الأيقونة</p>
-                <p className="text-xs" style={{ color: "var(--text-secondary)" }}>اضغط للتغيير</p>
+                <p className="text-[10px]" style={{ color: "var(--text2)" }}>اضغط للتغيير</p>
               </div>
             </div>
-            <input className="input" placeholder="الاسم" value={form.name} onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))} />
-            <div className="grid grid-cols-2 gap-3">
+            <input className="input" placeholder="الاسم" value={f.name} onChange={(e) => setF((p) => ({ ...p, name: e.target.value }))} />
+            <div className="grid grid-cols-2 gap-2">
               <div>
-                <label className="text-xs mb-1 block" style={{ color: "var(--text-secondary)" }}>الدور</label>
-                <select className="select" value={form.role} onChange={(e) => setForm((p) => ({ ...p, role: e.target.value as "parent" | "child" }))}>
+                <label className="text-[10px] mb-1 block" style={{ color: "var(--text2)" }}>الدور</label>
+                <select className="select" value={f.role} onChange={(e) => setF((p) => ({ ...p, role: e.target.value as "parent" | "child" }))}>
                   <option value="parent">والد/ة</option>
                   <option value="child">طفل/ة</option>
                 </select>
               </div>
               <div>
-                <label className="text-xs mb-1 block" style={{ color: "var(--text-secondary)" }}>اللون</label>
-                <ColorPicker value={form.color} onChange={(c) => setForm((p) => ({ ...p, color: c }))} />
+                <label className="text-[10px] mb-1 block" style={{ color: "var(--text2)" }}>اللون</label>
+                <Dots value={f.color} onChange={(c) => setF((p) => ({ ...p, color: c }))} />
               </div>
             </div>
             <div className="flex gap-2">
-              <button onClick={handleAdd} className="btn btn-primary flex-1">حفظ</button>
-              <button onClick={() => setShowForm(false)} className="btn btn-secondary">إلغاء</button>
+              <button onClick={add} className="btn btn-primary flex-1 text-sm">حفظ</button>
+              <button onClick={() => setShowForm(false)} className="btn btn-ghost text-sm">إلغاء</button>
             </div>
           </div>
         </div>
@@ -145,42 +142,35 @@ export default function FamilyPage() {
 
       {parents.length > 0 && (
         <div>
-          <h2 className="text-sm font-bold mb-2 flex items-center gap-1.5" style={{ color: "var(--text-secondary)" }}>
-            <Users size={14} /> الوالدون
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-            {parents.map((m, i) => <MemberCard key={m.id} m={m} i={i} />)}
-          </div>
+          <p className="text-[10px] font-bold mb-2 flex items-center gap-1" style={{ color: "var(--text2)" }}>
+            <Users size={11} /> الوالدون
+          </p>
+          <div className="space-y-2">{parents.map((m, i) => <Card key={m.id} m={m} i={i} />)}</div>
         </div>
       )}
 
       <div>
-        <h2 className="text-sm font-bold mb-2 flex items-center gap-1.5" style={{ color: "var(--text-secondary)" }}>
-          <Star size={14} /> الأطفال
-        </h2>
+        <p className="text-[10px] font-bold mb-2 flex items-center gap-1" style={{ color: "var(--text2)" }}>
+          <Star size={11} /> الأطفال
+        </p>
         {children.length === 0 ? (
-          <div className="card text-center py-10">
-            <p className="text-3xl mb-2">👶</p>
-            <p className="text-sm mb-3" style={{ color: "var(--text-secondary)" }}>لا يوجد أطفال بعد</p>
-            <button onClick={() => setShowForm(true)} className="btn btn-primary">إضافة</button>
+          <div className="glass-sm p-8 text-center">
+            <p className="text-2xl mb-1">👶</p>
+            <p className="text-xs mb-2" style={{ color: "var(--text2)" }}>لا يوجد أطفال</p>
+            <button onClick={() => setShowForm(true)} className="btn btn-primary text-xs">إضافة</button>
           </div>
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-            {children.map((m, i) => <MemberCard key={m.id} m={m} i={i} />)}
-          </div>
+          <div className="grid grid-cols-2 gap-2">{children.map((m, i) => <Card key={m.id} m={m} i={i} />)}</div>
         )}
       </div>
 
-      {showIconPicker && (
-        <IconPicker
-          value={iconTarget === "new" ? form.icon : editForm.icon}
+      {showPicker && (
+        <IconPicker value={pickerTarget === "new" ? f.icon : ef.icon}
           onChange={(icon) => {
-            if (iconTarget === "new") setForm((p) => ({ ...p, icon }));
-            else setEditForm((p) => ({ ...p, icon }));
-            setShowIconPicker(false);
+            pickerTarget === "new" ? setF((p) => ({ ...p, icon })) : setEf((p) => ({ ...p, icon }));
+            setShowPicker(false);
           }}
-          onClose={() => setShowIconPicker(false)}
-        />
+          onClose={() => setShowPicker(false)} />
       )}
     </div>
   );

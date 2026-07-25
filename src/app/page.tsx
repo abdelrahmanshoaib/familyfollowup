@@ -7,108 +7,77 @@ import { Trophy, CheckCircle, Users, ArrowLeft, Star, TrendingUp, Gift } from "l
 export default function Dashboard() {
   const { state, isTaskCompletedOnDate, getMemberTasksForDate } = useStore();
   const router = useRouter();
-
   const today = new Date().toISOString().split("T")[0];
   const totalTasks = state.tasks.filter((t) => t.active).length;
-  const totalPoints = state.familyMembers.reduce((sum, m) => sum + m.points, 0);
+  const totalPoints = state.familyMembers.reduce((s, m) => s + m.points, 0);
 
   const stats = [
-    { label: "الأعضاء", value: state.familyMembers.length, icon: Users, color: "#7c6cff" },
-    { label: "المهام", value: totalTasks, icon: CheckCircle, color: "#00d4aa" },
-    { label: "النقاط", value: totalPoints.toLocaleString("ar"), icon: Trophy, color: "#ffb347" },
-    { label: "المكافآت", value: state.rewards.length, icon: Gift, color: "#ff6b9d" },
+    { label: "الأعضاء", value: state.familyMembers.length, icon: Users, color: "var(--accent)" },
+    { label: "المهام", value: totalTasks, icon: CheckCircle, color: "var(--green)" },
+    { label: "النقاط", value: totalPoints.toLocaleString("ar"), icon: Trophy, color: "var(--orange)" },
+    { label: "المكافآت", value: state.rewards.length, icon: Gift, color: "var(--accent2)" },
   ];
 
   return (
-    <div className="space-y-5 animate-in">
-      <h1 className="text-xl font-bold">مرحباً 👋</h1>
+    <div className="space-y-4 anim">
+      <h1 className="text-lg font-bold">مرحباً 👋</h1>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        {stats.map((stat, i) => {
-          const Icon = stat.icon;
+      <div className="grid grid-cols-4 gap-2.5">
+        {stats.map((s, i) => {
+          const I = s.icon;
           return (
-            <div
-              key={stat.label}
-              className={`card animate-in-${i + 1}`}
-            >
-              <Icon size={20} style={{ color: stat.color }} className="mb-3" />
-              <div className="text-2xl font-bold" style={{ color: stat.color }}>
-                {stat.value}
-              </div>
-              <div className="text-xs mt-1" style={{ color: "var(--text-secondary)" }}>
-                {stat.label}
-              </div>
+            <div key={s.label} className={`glass-sm p-3 text-center anim-d${i + 1}`}>
+              <I size={18} style={{ color: s.color }} className="mx-auto mb-2" />
+              <div className="text-xl font-bold leading-tight" style={{ color: s.color }}>{s.value}</div>
+              <div className="text-[10px] mt-0.5" style={{ color: "var(--text2)" }}>{s.label}</div>
             </div>
           );
         })}
       </div>
 
-      {/* Members progress */}
-      <div className="card">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="font-bold">تقدم اليوم</h2>
-          <button
-            onClick={() => router.push("/tasks")}
-            className="flex items-center gap-1 text-sm bg-transparent border-none cursor-pointer"
-            style={{ color: "var(--accent)" }}
-          >
-            الكل <ArrowLeft size={14} />
+      {/* Members */}
+      <div className="glass p-4">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-sm font-bold">تقدم اليوم</h2>
+          <button onClick={() => router.push("/tasks")} className="flex items-center gap-1 text-xs bg-transparent border-none cursor-pointer" style={{ color: "var(--accent)" }}>
+            الكل <ArrowLeft size={12} />
           </button>
         </div>
 
         {state.familyMembers.length === 0 ? (
-          <div className="text-center py-10">
-            <p className="text-4xl mb-3">👨‍👩‍👧‍👦</p>
-            <p className="text-sm mb-3" style={{ color: "var(--text-secondary)" }}>
-              أضف أعضاء أسرتك للبدء
-            </p>
-            <button onClick={() => router.push("/family")} className="btn btn-primary">
-              إضافة عضو
-            </button>
+          <div className="text-center py-8">
+            <p className="text-3xl mb-2">👨‍👩‍👧‍👦</p>
+            <p className="text-xs mb-3" style={{ color: "var(--text2)" }}>أضف أعضاء أسرتك</p>
+            <button onClick={() => router.push("/family")} className="btn btn-primary btn-sm text-xs">إضافة</button>
           </div>
         ) : (
-          <div className="space-y-4">
-            {state.familyMembers.map((member, i) => {
-              const memberTasks = getMemberTasksForDate(member.id, today);
-              const completed = memberTasks.filter((t) =>
-                isTaskCompletedOnDate(t.id, member.id, today)
-              ).length;
-              const total = memberTasks.length || 1;
-              const percent = Math.round((completed / total) * 100);
+          <div className="space-y-3">
+            {state.familyMembers.map((m, i) => {
+              const mt = getMemberTasksForDate(m.id, today);
+              const done = mt.filter((t) => isTaskCompletedOnDate(t.id, m.id, today)).length;
+              const total = mt.length || 1;
+              const pct = Math.round((done / total) * 100);
 
               return (
-                <div key={member.id} className={`animate-in-${Math.min(i + 1, 5)}`}>
-                  <div className="flex items-center gap-3 mb-2">
-                    <div
-                      className="avatar w-10 h-10 text-sm"
-                      style={{ background: member.color || "var(--accent)" }}
-                    >
-                      {member.icon || member.name.charAt(0)}
+                <div key={m.id} className={`anim-d${Math.min(i + 1, 5)}`}>
+                  <div className="flex items-center gap-3">
+                    <div className="avatar w-10 h-10 text-xs" style={{ background: m.color || "var(--accent)" }}>
+                      {m.icon || m.name.charAt(0)}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between">
-                        <span className="font-semibold text-sm">{member.name}</span>
-                        <div className="flex items-center gap-3">
-                          <div className="flex items-center gap-1">
-                            <Star size={12} style={{ color: "#ffb347" }} fill="#ffb347" />
-                            <span className="text-xs font-bold" style={{ color: "#ffb347" }}>
-                              {member.points.toLocaleString("ar")}
-                            </span>
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-sm font-semibold truncate">{m.name}</span>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <div className="flex items-center gap-0.5">
+                            <Star size={10} fill="var(--orange)" style={{ color: "var(--orange)" }} />
+                            <span className="text-[11px] font-bold" style={{ color: "var(--orange)" }}>{m.points.toLocaleString("ar")}</span>
                           </div>
-                          <span className="text-xs" style={{ color: "var(--text-secondary)" }}>
-                            {completed}/{memberTasks.length}
-                          </span>
+                          <span className="text-[10px]" style={{ color: "var(--text2)" }}>{done}/{mt.length}</span>
                         </div>
                       </div>
-                      <div className="progress mt-2">
-                        <div
-                          className="progress-fill"
-                          style={{
-                            width: `${percent}%`,
-                            background: member.color || "var(--accent)",
-                          }}
-                        />
+                      <div className="progress">
+                        <div className="progress-fill" style={{ width: `${pct}%`, background: m.color || "var(--accent)" }} />
                       </div>
                     </div>
                   </div>
@@ -121,19 +90,13 @@ export default function Dashboard() {
 
       {/* Quick actions */}
       <div className="grid grid-cols-2 gap-3">
-        <button
-          onClick={() => router.push("/tasks")}
-          className="card card-interactive text-center py-5"
-        >
-          <CheckCircle size={28} style={{ color: "var(--success)" }} className="mx-auto mb-2" />
-          <span className="font-semibold text-sm">المهام</span>
+        <button onClick={() => router.push("/tasks")} className="glass p-5 text-center" style={{ border: "none", cursor: "pointer", width: "100%" }}>
+          <CheckCircle size={26} style={{ color: "var(--green)" }} className="mx-auto mb-2" />
+          <span className="text-sm font-semibold">المهام</span>
         </button>
-        <button
-          onClick={() => router.push("/rewards")}
-          className="card card-interactive text-center py-5"
-        >
-          <Gift size={28} style={{ color: "var(--accent2)" }} className="mx-auto mb-2" />
-          <span className="font-semibold text-sm">المكافآت</span>
+        <button onClick={() => router.push("/rewards")} className="glass p-5 text-center" style={{ border: "none", cursor: "pointer", width: "100%" }}>
+          <Gift size={26} style={{ color: "var(--accent2)" }} className="mx-auto mb-2" />
+          <span className="text-sm font-semibold">المكافآت</span>
         </button>
       </div>
     </div>

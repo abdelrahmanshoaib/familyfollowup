@@ -10,7 +10,6 @@ import {
   Gift,
   Calendar,
   Settings,
-  Trophy,
 } from "lucide-react";
 
 const links = [
@@ -25,86 +24,53 @@ const links = [
 export default function Navbar() {
   const pathname = usePathname();
   const { state } = useStore();
-  const totalPoints = state.familyMembers.reduce((sum, m) => sum + m.points, 0);
+  const totalPoints = state.familyMembers.reduce((s, m) => s + m.points, 0);
 
   return (
     <>
-      {/* Desktop */}
-      <header
-        className="hide-mobile fixed top-0 left-0 right-0 z-40"
-        style={{
-          background: "rgba(10, 10, 26, 0.85)",
-          backdropFilter: "blur(20px)",
-          borderBottom: "1px solid var(--border)",
-        }}
-      >
-        <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
+      {/* Desktop top bar */}
+      <header className="top-bar hide-m">
+        <div className="max-w-5xl mx-auto px-6 h-14 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2 no-underline">
-            <div
-              className="w-8 h-8 rounded-lg flex items-center justify-center"
-              style={{ background: "var(--accent)" }}
-            >
+            <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: "var(--accent)" }}>
               <span className="text-white text-sm">🏠</span>
             </div>
-            <span className="font-bold text-sm hide-mobile">إدارة الأسرة</span>
+            <span className="font-bold text-sm">إدارة الأسرة</span>
           </Link>
-
           <nav className="flex items-center gap-1">
-            {links.map((link) => {
-              const active = pathname === link.href;
-              const Icon = link.icon;
+            {links.map((l) => {
+              const on = pathname === l.href;
+              const I = l.icon;
               return (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all no-underline"
-                  style={{
-                    background: active ? "var(--accent)" : "transparent",
-                    color: active ? "white" : "var(--text-secondary)",
-                  }}
-                >
-                  <Icon size={16} />
-                  <span>{link.label}</span>
+                <Link key={l.href} href={l.href}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium no-underline transition-all"
+                  style={{ background: on ? "var(--accent)" : "transparent", color: on ? "#fff" : "var(--text2)" }}>
+                  <I size={15} /> {l.label}
                 </Link>
               );
             })}
           </nav>
-
-          <div
-            className="flex items-center gap-1.5 px-3 py-1 rounded-lg"
-            style={{ background: "rgba(255, 179, 71, 0.1)", color: "#ffb347" }}
-          >
-            <Trophy size={14} />
-            <span className="text-xs font-bold">{totalPoints.toLocaleString("ar")}</span>
+          <div className="glass-pill px-3 py-1.5 flex items-center gap-1.5">
+            <span style={{ color: "var(--orange)" }} className="text-xs font-bold">⭐ {totalPoints.toLocaleString("ar")}</span>
           </div>
         </div>
       </header>
 
-      {/* Mobile */}
-      <nav
-        className="hide-desktop fixed bottom-0 left-0 right-0 z-40"
-        style={{
-          background: "rgba(10, 10, 26, 0.9)",
-          backdropFilter: "blur(20px)",
-          borderTop: "1px solid var(--border)",
-          paddingBottom: "env(safe-area-inset-bottom)",
-        }}
-      >
-        <div className="flex items-center justify-around h-14 px-1">
-          {links.map((link) => {
-            const active = pathname === link.href;
-            const Icon = link.icon;
+      {/* Mobile bottom nav */}
+      <nav className="bottom-nav hide-d">
+        <div className="flex items-center justify-around">
+          {links.map((l) => {
+            const on = pathname === l.href;
+            const I = l.icon;
             return (
-              <Link
-                key={link.href}
-                href={link.href}
-                className="flex flex-col items-center gap-0.5 py-1 px-2 rounded-lg no-underline"
-                style={{
-                  color: active ? "var(--accent)" : "var(--text-secondary)",
-                }}
-              >
-                <Icon size={20} strokeWidth={active ? 2.2 : 1.5} />
-                <span className="text-[9px] font-medium">{link.label}</span>
+              <Link key={l.href} href={l.href} style={{ color: on ? "var(--accent)" : "var(--text2)" }}>
+                <div className="relative">
+                  <I size={22} strokeWidth={on ? 2.2 : 1.6} />
+                  {on && (
+                    <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-4 h-0.5 rounded-full" style={{ background: "var(--accent)" }} />
+                  )}
+                </div>
+                <span>{l.label}</span>
               </Link>
             );
           })}
