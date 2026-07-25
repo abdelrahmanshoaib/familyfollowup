@@ -1,173 +1,483 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useStore } from "@/lib/store";
-import { Plus, Trash2, Star, Edit3, Check, X, Users, Trophy } from "lucide-react";
 import IconPicker from "@/components/IconPicker";
 
-const colors = ["#8b5cf6", "#ec4899", "#22c55e", "#f59e0b", "#3b82f6", "#a78bfa", "#f472b6", "#2dd4bf", "#e879f9", "#38bdf8"];
+const COLORS = [
+  "#8b5cf6", "#ec4899", "#22c55e", "#f59e0b", "#3b82f6",
+  "#a78bfa", "#f472b6", "#2dd4bf", "#e879f9", "#38bdf8",
+];
+
+const EMOJIS = ["👦", "👧", "👨", "👩", "🧑", "👶", "🧒", "👴", "👵", "🦸", "🦹", "🧑‍🎓"];
+
+const CIRCUMFERENCE = 2 * Math.PI * 20;
 
 export default function FamilyPage() {
   const { state, addFamilyMember, updateFamilyMember, removeFamilyMember } = useStore();
-  const [showForm, setShowForm] = useState(false);
-  const [editId, setEditId] = useState<string | null>(null);
+  const [sheetOpen, setSheetOpen] = useState(false);
   const [showPicker, setShowPicker] = useState(false);
-  const [pickerTarget, setPickerTarget] = useState<"new" | "edit">("new");
+  const [detailId, setDetailId] = useState<string | null>(null);
 
-  const [f, setF] = useState({ name: "", role: "child" as "parent" | "child", color: "#8b5cf6", icon: "" });
-  const [ef, setEf] = useState({ name: "", role: "child" as "parent" | "child", color: "#8b5cf6", icon: "" });
+  const [form, setForm] = useState({
+    name: "",
+    role: "child" as "parent" | "child",
+    color: "#8b5cf6",
+    icon: "",
+    age: "",
+    phone: "",
+  });
 
-  const add = () => {
-    if (!f.name.trim()) return;
-    addFamilyMember({ name: f.name, role: f.role, avatar: f.icon || f.name.charAt(0), color: f.color, icon: f.icon });
-    setF({ name: "", role: "child", color: "#8b5cf6", icon: "" });
-    setShowForm(false);
+  const resetForm = () =>
+    setForm({ name: "", role: "child", color: "#8b5cf6", icon: "", age: "", phone: "" });
+
+  const handleSave = () => {
+    if (!form.name.trim()) return;
+    addFamilyMember({
+      name: form.name,
+      role: form.role,
+      avatar: form.icon || form.name.charAt(0),
+      color: form.color,
+      icon: form.icon,
+      age: form.age ? Number(form.age) : undefined,
+      phone: form.phone || undefined,
+    });
+    resetForm();
+    setSheetOpen(false);
   };
 
-  const save = () => {
-    if (!editId || !ef.name.trim()) return;
-    updateFamilyMember(editId, { name: ef.name, role: ef.role, avatar: ef.icon || ef.name.charAt(0), color: ef.color, icon: ef.icon });
-    setEditId(null);
-  };
+  const completedCount = useMemo(() => {
+    const counts: Record<string, number> = {};
+    state.completedTasks.forEach((ct) => {
+      counts[ct.memberId] = (counts[ct.memberId] || 0) + 1;
+    });
+    return counts;
+  }, [state.completedTasks]);
 
-  const parents = state.familyMembers.filter((m) => m.role === "parent");
-  const children = state.familyMembers.filter((m) => m.role === "child");
-
-  const Dots = ({ value, onChange }: { value: string; onChange: (c: string) => void }) => (
-    <div className="flex gap-2 flex-wrap">
-      {colors.map((c) => (
-        <button key={c} onClick={() => onChange(c)} className="w-7 h-7 rounded-full cursor-pointer border-[2.5px] transition-transform"
-          style={{ background: c, borderColor: value === c ? "#fff" : "transparent", transform: value === c ? "scale(1.15)" : "scale(1)" }} />
-      ))}
-    </div>
-  );
-
-  const Card = ({ m, i }: { m: typeof state.familyMembers[0]; i: number }) => {
-    const editing = editId === m.id;
-
-    if (editing) {
-      return (
-        <div className="card-sm anim-scale">
-          <div className="flex items-center gap-3 mb-3">
-            <button onClick={() => { setPickerTarget("edit"); setShowPicker(true); }}
-              className="avatar cursor-pointer border-none" style={{ width: 44, height: 44, background: ef.color, fontSize: "1.2rem" }}>
-              {ef.icon || ef.name.charAt(0) || "?"}
-            </button>
-            <input className="input flex-1 text-sm" value={ef.name} onChange={(e) => setEf((p) => ({ ...p, name: e.target.value }))} placeholder="الاسم" />
-          </div>
-          <Dots value={ef.color} onChange={(c) => setEf((p) => ({ ...p, color: c }))} />
-          <div className="flex gap-2 mt-3">
-            <button onClick={save} className="btn btn-success btn-sm flex-1"><Check size={12} /> حفظ</button>
-            <button onClick={() => setEditId(null)} className="btn btn-ghost btn-sm"><X size={12} /></button>
-            <button onClick={() => { removeFamilyMember(m.id); setEditId(null); }} className="btn btn-danger btn-sm px-2.5"><Trash2 size={12} /></button>
-          </div>
-        </div>
-      );
-    }
-
-    return (
-      <div className={`card-sm anim${Math.min(i + 1, 5)}`} style={{ borderRight: `3px solid ${m.color || "var(--accent)"}` }}>
-        <div className="flex items-center gap-3">
-          <div className="avatar w-11 h-11 text-sm" style={{ background: m.color || "var(--accent)" }}>
-            {m.icon || m.name.charAt(0)}
-          </div>
-          <div className="flex-1 min-w-0">
-            <h3 className="text-sm font-bold truncate">{m.name}</h3>
-            <p className="text-[11px]" style={{ color: "var(--text2)" }}>{m.role === "parent" ? "والد/ة" : "طفل/ة"}</p>
-            <div className="flex items-center gap-1 mt-1">
-              <Trophy size={11} style={{ color: "var(--orange)" }} />
-              <span className="text-[11px] font-extrabold" style={{ color: "var(--orange)" }}>{m.points.toLocaleString("ar")}</span>
-            </div>
-          </div>
-          <div className="flex gap-1 shrink-0">
-            <button onClick={() => { setEditId(m.id); setEf({ name: m.name, role: m.role, color: m.color || "#8b5cf6", icon: m.icon || "" }); }}
-              className="w-8 h-8 rounded-xl flex items-center justify-center bg-transparent border-none cursor-pointer" style={{ color: "var(--text3)" }}>
-              <Edit3 size={14} />
-            </button>
-            <button onClick={() => removeFamilyMember(m.id)}
-              className="w-8 h-8 rounded-xl flex items-center justify-center bg-transparent border-none cursor-pointer" style={{ color: "var(--red)" }}>
-              <Trash2 size={14} />
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  };
+  const getLevel = (points: number) => Math.floor(points / 100) + 1;
+  const getProgress = (points: number) => Math.min((points % 100), 100);
 
   return (
-    <div className="space-y-5 anim">
-      <div className="flex items-center justify-between">
-        <h1 className="title">أعضاء الأسرة</h1>
-        <button onClick={() => setShowForm(!showForm)} className="btn btn-primary btn-sm">
-          <Plus size={14} /> جديد
-        </button>
+    <div className="space-y-6">
+      <div className="anim">
+        <h1 className="font-headline-lg" style={{ fontSize: 28, fontWeight: 700, color: "var(--on-surface)" }}>
+          الأسرة
+        </h1>
+        <p className="font-body-md mt-1" style={{ fontSize: 14, color: "var(--on-surface-variant)" }}>
+          إدارة أفراد العائلة وبياناتهم
+        </p>
       </div>
 
-      {showForm && (
-        <div className="card anim" style={{ borderColor: "rgba(139,92,246,0.25)" }}>
-          <div className="space-y-3">
-            <div className="flex items-center gap-3">
-              <button onClick={() => { setPickerTarget("new"); setShowPicker(true); }}
-                className="avatar cursor-pointer border-none" style={{ width: 52, height: 52, background: f.color, fontSize: "1.4rem" }}>
-                {f.icon || f.name.charAt(0) || "?"}
+      {state.familyMembers.length === 0 && (
+        <div className="glass-card p-6 text-center anim1">
+          <div
+            className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4"
+            style={{ background: "var(--primary-container)" }}
+          >
+            <span className="material-symbols-outlined filled-icon" style={{ fontSize: 32, color: "var(--primary)" }}>
+              family_restroom
+            </span>
+          </div>
+          <p className="font-headline-sm" style={{ fontSize: 16, fontWeight: 600, color: "var(--on-surface)" }}>
+            لا يوجد أفراد بعد
+          </p>
+          <p className="font-body-sm mt-1" style={{ fontSize: 13, color: "var(--on-surface-variant)" }}>
+            أضف أول فرد من العائلة
+          </p>
+        </div>
+      )}
+
+      {state.familyMembers.map((member, i) => {
+        const level = getLevel(member.points);
+        const progress = getProgress(member.points);
+        const dashoffset = CIRCUMFERENCE * (1 - progress / 100);
+        const animClass = `anim${Math.min(i + 1, 5)}`;
+
+        return (
+          <div key={member.id} className={`glass-card p-4 space-y-4 ${animClass}`}>
+            <div className="flex items-center gap-4">
+              <div className="relative">
+                <div
+                  className="w-16 h-16 rounded-full border-2 flex items-center justify-center font-headline-sm"
+                  style={{
+                    borderColor: member.color || "var(--primary)",
+                    background: `${member.color || "var(--primary)"}18`,
+                    color: member.color || "var(--primary)",
+                    fontSize: 20,
+                    fontWeight: 700,
+                  }}
+                >
+                  {member.icon || member.name.charAt(0)}
+                </div>
+              </div>
+
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <h3 className="font-headline-sm truncate" style={{ fontSize: 16, fontWeight: 700, color: "var(--on-surface)" }}>
+                    {member.name}
+                  </h3>
+                  <span
+                    className="badge"
+                    style={{
+                      background: member.role === "parent" ? "var(--secondary-fixed)" : "var(--primary-container)",
+                      color: member.role === "parent" ? "var(--on-secondary-fixed)" : "var(--on-primary-container)",
+                    }}
+                  >
+                    {member.role === "parent" ? "والد/ة" : "طفل/ة"}
+                  </span>
+                </div>
+                {member.age !== undefined && (
+                  <p className="font-body-sm mt-0.5" style={{ fontSize: 12, color: "var(--on-surface-variant)" }}>
+                    العمر: {member.age} سنة
+                  </p>
+                )}
+              </div>
+
+              <div className="w-12 h-12 shrink-0">
+                <svg width="48" height="48" viewBox="0 0 48 48">
+                  <circle
+                    cx="24"
+                    cy="24"
+                    r="20"
+                    fill="none"
+                    strokeWidth="4"
+                    className="progress-ring-bg"
+                  />
+                  <circle
+                    cx="24"
+                    cy="24"
+                    r="20"
+                    fill="none"
+                    strokeWidth="4"
+                    strokeLinecap="round"
+                    className="progress-ring-fill"
+                    style={{
+                      stroke: member.color || "var(--primary)",
+                      strokeDasharray: CIRCUMFERENCE,
+                      strokeDashoffset: dashoffset,
+                      transform: "rotate(-90deg)",
+                      transformOrigin: "center",
+                    }}
+                  />
+                  <text
+                    x="24"
+                    y="24"
+                    textAnchor="middle"
+                    dominantBaseline="central"
+                    className="font-headline-sm"
+                    style={{ fontSize: 12, fontWeight: 700, fill: "var(--on-surface)" }}
+                  >
+                    {member.points.toLocaleString("ar")}
+                  </text>
+                </svg>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-3">
+              {[
+                { label: "النقاط", value: member.points.toLocaleString("ar"), icon: "star" },
+                { label: "المستوى", value: level.toLocaleString("ar"), icon: "trending_up" },
+                { label: "المهام", value: (completedCount[member.id] || 0).toLocaleString("ar"), icon: "task_alt" },
+              ].map((stat) => (
+                <div
+                  key={stat.label}
+                  className="rounded-2xl p-3 text-center"
+                  style={{ background: "var(--surface-container-high)" }}
+                >
+                  <span className="material-symbols-outlined" style={{ fontSize: 18, color: "var(--on-surface-variant)" }}>
+                    {stat.icon}
+                  </span>
+                  <p className="font-headline-sm mt-1" style={{ fontSize: 16, fontWeight: 700, color: "var(--on-surface)" }}>
+                    {stat.value}
+                  </p>
+                  <p className="font-body-sm" style={{ fontSize: 11, color: "var(--on-surface-variant)" }}>
+                    {stat.label}
+                  </p>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setDetailId(detailId === member.id ? null : member.id)}
+                className="flex-1 h-10 rounded-2xl border-none cursor-pointer font-body-md flex items-center justify-center gap-1.5"
+                style={{
+                  background: "var(--surface-container-high)",
+                  color: "var(--on-surface)",
+                  fontSize: 13,
+                  fontWeight: 500,
+                }}
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: 18 }}>visibility</span>
+                تعرض
               </button>
-              <div>
-                <p className="text-sm font-bold">اختر الأيقونة</p>
-                <p className="text-[11px]" style={{ color: "var(--text2)" }}>اضغط لاختيار أيقونة</p>
-              </div>
+              <button
+                onClick={() => setDetailId(detailId === member.id ? null : member.id)}
+                className="flex-1 h-10 rounded-2xl border-none cursor-pointer font-body-md flex items-center justify-center gap-1.5"
+                style={{
+                  background: "var(--primary)",
+                  color: "var(--on-primary)",
+                  fontSize: 13,
+                  fontWeight: 500,
+                }}
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: 18 }}>info</span>
+                عرض التفاصيل
+              </button>
+              <button
+                onClick={() => removeFamilyMember(member.id)}
+                className="w-10 h-10 rounded-2xl border-none cursor-pointer flex items-center justify-center shrink-0"
+                style={{ background: "rgba(186, 26, 26, 0.1)", color: "var(--error)" }}
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: 20 }}>delete</span>
+              </button>
             </div>
-            <input className="input" placeholder="الاسم" value={f.name} onChange={(e) => setF((p) => ({ ...p, name: e.target.value }))} />
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="label mb-1.5 block">الدور</label>
-                <select className="select" value={f.role} onChange={(e) => setF((p) => ({ ...p, role: e.target.value as "parent" | "child" }))}>
-                  <option value="parent">والد/ة</option>
-                  <option value="child">طفل/ة</option>
-                </select>
+
+            {detailId === member.id && (
+              <div className="space-y-3 pt-2" style={{ borderTop: "1px solid var(--outline-variant)" }}>
+                <div className="space-y-2">
+                  {member.phone && (
+                    <div className="flex items-center gap-2 font-body-sm" style={{ fontSize: 13, color: "var(--on-surface-variant)" }}>
+                      <span className="material-symbols-outlined" style={{ fontSize: 18 }}>phone</span>
+                      {member.phone}
+                    </div>
+                  )}
+                  {member.email && (
+                    <div className="flex items-center gap-2 font-body-sm" style={{ fontSize: 13, color: "var(--on-surface-variant)" }}>
+                      <span className="material-symbols-outlined" style={{ fontSize: 18 }}>email</span>
+                      {member.email}
+                    </div>
+                  )}
+                  {member.notes && (
+                    <div className="flex items-center gap-2 font-body-sm" style={{ fontSize: 13, color: "var(--on-surface-variant)" }}>
+                      <span className="material-symbols-outlined" style={{ fontSize: 18 }}>notes</span>
+                      {member.notes}
+                    </div>
+                  )}
+                </div>
+                <div className="flex gap-2">
+                  <input
+                    className="input-field flex-1"
+                    style={{ height: 44, fontSize: 13 }}
+                    defaultValue={member.name}
+                    onBlur={(e) => {
+                      if (e.target.value.trim() && e.target.value !== member.name) {
+                        updateFamilyMember(member.id, { name: e.target.value });
+                      }
+                    }}
+                    placeholder="تعديل الاسم"
+                  />
+                  <select
+                    className="select-field"
+                    style={{ height: 44, fontSize: 13, width: "auto", minWidth: 100 }}
+                    defaultValue={member.role}
+                    onChange={(e) =>
+                      updateFamilyMember(member.id, { role: e.target.value as "parent" | "child" })
+                    }
+                  >
+                    <option value="parent">والد/ة</option>
+                    <option value="child">طفل/ة</option>
+                  </select>
+                </div>
+                <div className="flex gap-2 flex-wrap">
+                  {COLORS.map((c) => (
+                    <button
+                      key={c}
+                      onClick={() => updateFamilyMember(member.id, { color: c })}
+                      className="w-7 h-7 rounded-full cursor-pointer border-none"
+                      style={{
+                        background: c,
+                        border: member.color === c ? "2px solid var(--on-surface)" : "2px solid transparent",
+                        transform: member.color === c ? "scale(1.15)" : "scale(1)",
+                        transition: "transform 0.15s",
+                      }}
+                    />
+                  ))}
+                </div>
               </div>
-              <div>
-                <label className="label mb-1.5 block">اللون</label>
-                <Dots value={f.color} onChange={(c) => setF((p) => ({ ...p, color: c }))} />
-              </div>
+            )}
+          </div>
+        );
+      })}
+
+      <button className="fab" onClick={() => setSheetOpen(true)}>
+        <span className="material-symbols-outlined">person_add</span>
+      </button>
+
+      <div className={`sheet-overlay ${sheetOpen ? "open" : ""}`} onClick={() => setSheetOpen(false)} />
+
+      <div className={`bottom-sheet ${sheetOpen ? "open" : ""}`}>
+        <div className="w-12 h-1.5 rounded-full mx-auto mb-4" style={{ background: "var(--outline-variant)" }} />
+
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="font-headline-md" style={{ fontSize: 20, fontWeight: 700, color: "var(--on-surface)" }}>
+            إضافة فرد جديد
+          </h2>
+          <button
+            onClick={() => { setSheetOpen(false); resetForm(); }}
+            className="w-10 h-10 rounded-full flex items-center justify-center border-none cursor-pointer"
+            style={{ background: "var(--surface-container-high)", color: "var(--on-surface-variant)" }}
+          >
+            <span className="material-symbols-outlined" style={{ fontSize: 22 }}>close</span>
+          </button>
+        </div>
+
+        <div className="space-y-4">
+          <div>
+            <label className="font-label-md block mb-2" style={{ fontSize: 13, color: "var(--on-surface-variant)" }}>
+              الاسم
+            </label>
+            <input
+              className="input-field"
+              value={form.name}
+              onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
+              placeholder="اسم الفرد"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="font-label-md block mb-2" style={{ fontSize: 13, color: "var(--on-surface-variant)" }}>
+                العمر
+              </label>
+              <input
+                className="input-field"
+                type="number"
+                value={form.age}
+                onChange={(e) => setForm((p) => ({ ...p, age: e.target.value }))}
+                placeholder="العمر"
+              />
             </div>
-            <div className="flex gap-2 pt-1">
-              <button onClick={add} className="btn btn-primary flex-1">حفظ</button>
-              <button onClick={() => setShowForm(false)} className="btn btn-ghost">إلغاء</button>
+            <div>
+              <label className="font-label-md block mb-2" style={{ fontSize: 13, color: "var(--on-surface-variant)" }}>
+                الدور
+              </label>
+              <select
+                className="select-field"
+                value={form.role}
+                onChange={(e) => setForm((p) => ({ ...p, role: e.target.value as "parent" | "child" }))}
+              >
+                <option value="parent">والد/ة</option>
+                <option value="child">طفل/ة</option>
+              </select>
             </div>
           </div>
-        </div>
-      )}
 
-      {parents.length > 0 && (
-        <div>
-          <p className="label mb-2.5 flex items-center gap-1.5"><Users size={12} /> الوالدون</p>
-          <div className="space-y-2.5">{parents.map((m, i) => <Card key={m.id} m={m} i={i} />)}</div>
-        </div>
-      )}
-
-      <div>
-        <p className="label mb-2.5 flex items-center gap-1.5"><Star size={12} /> الأطفال</p>
-        {children.length === 0 ? (
-          <div className="card-sm text-center py-10">
-            <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-3" style={{ background: "var(--orange-dim)" }}>
-              <Users size={24} style={{ color: "var(--orange)" }} />
-            </div>
-            <p className="text-sm font-bold mb-0.5">لا يوجد أطفال</p>
-            <p className="text-xs mb-3" style={{ color: "var(--text2)" }}>أضف أول طفل</p>
-            <button onClick={() => setShowForm(true)} className="btn btn-primary btn-sm">إضافة</button>
+          <div>
+            <label className="font-label-md block mb-2" style={{ fontSize: 13, color: "var(--on-surface-variant)" }}>
+              رقم الجوال
+            </label>
+            <input
+              className="input-field"
+              type="tel"
+              value={form.phone}
+              onChange={(e) => setForm((p) => ({ ...p, phone: e.target.value }))}
+              placeholder="05xxxxxxxx"
+              dir="ltr"
+            />
           </div>
-        ) : (
-          <div className="grid grid-cols-2 gap-2.5">{children.map((m, i) => <Card key={m.id} m={m} i={i} />)}</div>
-        )}
+
+          <div>
+            <label className="font-label-md block mb-2" style={{ fontSize: 13, color: "var(--on-surface-variant)" }}>
+              اللون
+            </label>
+            <div className="flex gap-2 flex-wrap">
+              {COLORS.map((c) => (
+                <button
+                  key={c}
+                  onClick={() => setForm((p) => ({ ...p, color: c }))}
+                  className="w-8 h-8 rounded-full cursor-pointer border-none"
+                  style={{
+                    background: c,
+                    border: form.color === c ? "2.5px solid var(--on-surface)" : "2.5px solid transparent",
+                    transform: form.color === c ? "scale(1.15)" : "scale(1)",
+                    transition: "transform 0.15s",
+                  }}
+                />
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label className="font-label-md block mb-2" style={{ fontSize: 13, color: "var(--on-surface-variant)" }}>
+              الأيقونة
+            </label>
+            <div className="flex gap-2 flex-wrap">
+              {EMOJIS.map((emoji) => (
+                <button
+                  key={emoji}
+                  onClick={() => setForm((p) => ({ ...p, icon: emoji }))}
+                  className="w-10 h-10 rounded-xl flex items-center justify-center cursor-pointer border-none"
+                  style={{
+                    background: form.icon === emoji ? "var(--primary-container)" : "var(--surface-container-high)",
+                    fontSize: 20,
+                    border: form.icon === emoji ? "2px solid var(--primary)" : "2px solid transparent",
+                  }}
+                >
+                  {emoji}
+                </button>
+              ))}
+              <button
+                onClick={() => setShowPicker(true)}
+                className="w-10 h-10 rounded-xl flex items-center justify-center cursor-pointer border-none"
+                style={{ background: "var(--surface-container-high)" }}
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: 20, color: "var(--on-surface-variant)" }}>
+                  more_horiz
+                </span>
+              </button>
+            </div>
+            {form.icon && (
+              <div className="flex items-center gap-2 mt-2">
+                <div
+                  className="w-10 h-10 rounded-xl flex items-center justify-center font-headline-sm"
+                  style={{
+                    background: `${form.color}18`,
+                    color: form.color,
+                    fontSize: 20,
+                  }}
+                >
+                  {form.icon}
+                </div>
+                <button
+                  onClick={() => setForm((p) => ({ ...p, icon: "" }))}
+                  className="font-body-sm border-none bg-transparent cursor-pointer flex items-center gap-1"
+                  style={{ fontSize: 12, color: "var(--error)" }}
+                >
+                  <span className="material-symbols-outlined" style={{ fontSize: 16 }}>close</span>
+                  إزالة
+                </button>
+              </div>
+            )}
+          </div>
+
+          <button
+            onClick={handleSave}
+            className="w-full h-12 rounded-2xl border-none cursor-pointer font-body-md flex items-center justify-center gap-2"
+            style={{
+              background: "var(--primary)",
+              color: "var(--on-primary)",
+              fontSize: 15,
+              fontWeight: 600,
+              opacity: form.name.trim() ? 1 : 0.5,
+            }}
+            disabled={!form.name.trim()}
+          >
+            <span className="material-symbols-outlined" style={{ fontSize: 22 }}>check</span>
+            حفظ
+          </button>
+        </div>
       </div>
 
       {showPicker && (
-        <IconPicker value={pickerTarget === "new" ? f.icon : ef.icon}
+        <IconPicker
+          value={form.icon}
           onChange={(icon) => {
-            pickerTarget === "new" ? setF((p) => ({ ...p, icon })) : setEf((p) => ({ ...p, icon }));
+            setForm((p) => ({ ...p, icon }));
             setShowPicker(false);
           }}
-          onClose={() => setShowPicker(false)} />
+          onClose={() => setShowPicker(false)}
+        />
       )}
     </div>
   );
