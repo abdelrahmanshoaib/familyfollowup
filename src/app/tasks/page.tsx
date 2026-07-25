@@ -105,16 +105,16 @@ export default function TasksPage() {
       <div className="chip-scroll anim2">
         <button
           onClick={() => setFilterMember("all")}
-          className={`flex flex-col items-center gap-1 flex-shrink-0 cursor-pointer bg-transparent border-none`}
+          className="flex flex-col items-center gap-1 flex-shrink-0 cursor-pointer bg-transparent border-none"
           style={{ scrollSnapAlign: "start" }}
         >
           <div
-            className={`w-14 h-14 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-200 ${
-              filterMember === "all" ? "ring-2 ring-primary" : ""
-            }`}
+            className="w-14 h-14 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-200"
             style={{
-              background: filterMember === "all" ? "var(--primary-container)" : "var(--surface-container-high)",
+              background: filterMember === "all" ? "var(--primary-container)" : "transparent",
               color: filterMember === "all" ? "var(--on-primary-container)" : "var(--on-surface-variant)",
+              border: filterMember === "all" ? "2px solid var(--primary)" : "2px solid transparent",
+              opacity: filterMember === "all" ? 1 : 0.6,
             }}
           >
             <span className="material-symbols-outlined">groups</span>
@@ -129,12 +129,12 @@ export default function TasksPage() {
             style={{ scrollSnapAlign: "start" }}
           >
             <div
-              className={`w-14 h-14 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-200 overflow-hidden ${
-                filterMember === m.id ? "ring-2 ring-primary" : ""
-              }`}
+              className="w-14 h-14 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-200 overflow-hidden"
               style={{
-                background: m.color || "var(--primary-container)",
-                color: "var(--on-primary)",
+                background: filterMember === m.id ? "var(--primary-container)" : "transparent",
+                color: filterMember === m.id ? "var(--on-primary-container)" : "var(--on-surface-variant)",
+                border: filterMember === m.id ? "2px solid var(--primary)" : "2px solid transparent",
+                opacity: filterMember === m.id ? 1 : 0.6,
               }}
             >
               {m.avatar ? (
@@ -194,7 +194,7 @@ export default function TasksPage() {
                     width: 40,
                     height: 40,
                     borderRadius: "50%",
-                    border: done ? "none" : "2px solid var(--primary)",
+                    border: done ? "2px solid var(--primary)" : "2px solid var(--primary)",
                     background: done ? "var(--primary)" : "transparent",
                     transition: "all 0.3s ease",
                   }}

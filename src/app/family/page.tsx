@@ -54,6 +54,16 @@ export default function FamilyPage() {
     return counts;
   }, [state.completedTasks]);
 
+  const memberProgress = useMemo(() => {
+    const pcts: Record<string, number> = {};
+    state.familyMembers.forEach((m) => {
+      const totalTasks = state.tasks.filter((t) => t.active && t.assignedTo.includes(m.id)).length;
+      const doneTasks = state.completedTasks.filter((ct) => ct.memberId === m.id).length;
+      pcts[m.id] = totalTasks > 0 ? Math.min(Math.round((doneTasks / totalTasks) * 100), 100) : 0;
+    });
+    return pcts;
+  }, [state.familyMembers, state.tasks, state.completedTasks]);
+
   const getLevel = (points: number) => Math.floor(points / 100) + 1;
   const getProgress = (points: number) => Math.min((points % 100), 100);
 
@@ -89,7 +99,7 @@ export default function FamilyPage() {
 
       {state.familyMembers.map((member, i) => {
         const level = getLevel(member.points);
-        const progress = getProgress(member.points);
+        const progress = memberProgress[member.id] ?? 0;
         const dashoffset = CIRCUMFERENCE * (1 - progress / 100);
         const animClass = `anim${Math.min(i + 1, 5)}`;
 
@@ -167,31 +177,31 @@ export default function FamilyPage() {
                     className="font-headline-sm"
                     style={{ fontSize: 12, fontWeight: 700, fill: "var(--on-surface)" }}
                   >
-                    {member.points.toLocaleString("ar")}
+                    {progress.toLocaleString("ar")}٪
                   </text>
                 </svg>
               </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-3 gap-3" style={{ background: "rgba(255,255,255,0.3)", borderRadius: 12, padding: 8 }}>
               {[
-                { label: "النقاط", value: member.points.toLocaleString("ar"), icon: "star" },
-                { label: "المستوى", value: level.toLocaleString("ar"), icon: "trending_up" },
-                { label: "المهام", value: (completedCount[member.id] || 0).toLocaleString("ar"), icon: "task_alt" },
-              ].map((stat) => (
+                { label: "النقاط", value: member.points.toLocaleString("ar"), color: "var(--primary)" },
+                { label: "المستوى", value: level.toLocaleString("ar"), color: "var(--tertiary)" },
+                { label: "المهام", value: (completedCount[member.id] || 0).toLocaleString("ar"), color: "var(--secondary)" },
+              ].map((stat, si) => (
                 <div
                   key={stat.label}
-                  className="rounded-2xl p-3 text-center"
-                  style={{ background: "var(--surface-container-high)" }}
+                  className="text-center"
+                  style={{
+                    padding: 8,
+                    ...(si === 1 ? { borderLeft: "1px solid rgba(255,255,255,0.4)", borderRight: "1px solid rgba(255,255,255,0.4)" } : {}),
+                  }}
                 >
-                  <span className="material-symbols-outlined" style={{ fontSize: 18, color: "var(--on-surface-variant)" }}>
-                    {stat.icon}
-                  </span>
-                  <p className="font-headline-sm mt-1" style={{ fontSize: 16, fontWeight: 700, color: "var(--on-surface)" }}>
-                    {stat.value}
-                  </p>
-                  <p className="font-body-sm" style={{ fontSize: 11, color: "var(--on-surface-variant)" }}>
+                  <p className="font-label-md" style={{ fontSize: 12, color: "var(--on-surface-variant)" }}>
                     {stat.label}
+                  </p>
+                  <p className="font-headline-sm" style={{ fontSize: 20, fontWeight: 700, color: stat.color }}>
+                    {stat.value}
                   </p>
                 </div>
               ))}
@@ -200,36 +210,28 @@ export default function FamilyPage() {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setDetailId(detailId === member.id ? null : member.id)}
-                className="flex-1 h-10 rounded-2xl border-none cursor-pointer font-body-md flex items-center justify-center gap-1.5"
+                className="flex-1 h-10 rounded-xl border-none cursor-pointer font-label-md"
                 style={{
-                  background: "var(--surface-container-high)",
+                  background: "rgba(255,255,255,0.5)",
                   color: "var(--on-surface)",
                   fontSize: 13,
                   fontWeight: 500,
+                  border: "1px solid rgba(255,255,255,0.2)",
                 }}
               >
-                <span className="material-symbols-outlined" style={{ fontSize: 18 }}>visibility</span>
-                تعرض
+                تعديل
               </button>
               <button
                 onClick={() => setDetailId(detailId === member.id ? null : member.id)}
-                className="flex-1 h-10 rounded-2xl border-none cursor-pointer font-body-md flex items-center justify-center gap-1.5"
+                className="flex-1 h-10 rounded-xl border-none cursor-pointer font-label-md"
                 style={{
                   background: "var(--primary)",
-                  color: "var(--on-primary)",
+                  color: "#fff",
                   fontSize: 13,
                   fontWeight: 500,
                 }}
               >
-                <span className="material-symbols-outlined" style={{ fontSize: 18 }}>info</span>
                 عرض التفاصيل
-              </button>
-              <button
-                onClick={() => removeFamilyMember(member.id)}
-                className="w-10 h-10 rounded-2xl border-none cursor-pointer flex items-center justify-center shrink-0"
-                style={{ background: "rgba(186, 26, 26, 0.1)", color: "var(--error)" }}
-              >
-                <span className="material-symbols-outlined" style={{ fontSize: 20 }}>delete</span>
               </button>
             </div>
 

@@ -33,6 +33,9 @@ export default function Dashboard() {
   const maxWeek = Math.max(...weekData.map((d) => d.count), 1);
 
   const circumference = 2 * Math.PI * 28;
+  const taskCategoryLabels: Record<string, string> = {
+    routine: "روتينية", chore: "مهام منزلية", homework: "واجبات", behavior: "سلوك", custom: "مخصصة",
+  };
 
   return (
     <div className="space-y-6 anim">
@@ -173,16 +176,16 @@ export default function Dashboard() {
                   key={m.id}
                   className={`glass-card anim${Math.min(i + 1, 5)}`}
                   style={{
-                    minWidth: 120, flex: "0 0 auto", display: "flex", flexDirection: "column",
+                    minWidth: 140, flex: "0 0 auto", display: "flex", flexDirection: "column",
                     alignItems: "center", padding: 16, gap: 8, cursor: "pointer",
                   }}
                   onClick={() => router.push("/tasks")}
                 >
-                  <div style={{ position: "relative", width: 48, height: 48 }}>
-                    <svg width={48} height={48} style={{ transform: "rotate(-90deg)" }}>
-                      <circle cx={24} cy={24} r={28} fill="none" stroke="color-mix(in srgb, var(--on-surface) 10%, transparent)" strokeWidth={4} />
+                  <div style={{ position: "relative", width: 64, height: 64 }}>
+                    <svg width={64} height={64} style={{ transform: "rotate(-90deg)" }}>
+                      <circle cx={32} cy={32} r={28} fill="none" stroke="var(--surface-container-high)" strokeWidth={4} />
                       <circle
-                        cx={24} cy={24} r={28} fill="none"
+                        cx={32} cy={32} r={28} fill="none"
                         stroke={m.color || "var(--primary)"}
                         strokeWidth={4}
                         strokeDasharray={circumference}
@@ -193,18 +196,28 @@ export default function Dashboard() {
                     <div
                       style={{
                         position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center",
-                        borderRadius: "50%", background: m.color || "var(--primary)", color: "#fff",
-                        fontSize: 16, fontWeight: 700,
                       }}
                     >
-                      {m.icon || m.name.charAt(0)}
+                      <img
+                        src={m.photo || undefined}
+                        alt={m.name}
+                        className="w-12 h-12 rounded-full object-cover"
+                        onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                      />
+                      {!m.photo && (
+                        <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ background: m.color || "var(--primary)", color: "#fff", fontSize: 16, fontWeight: 700 }}>
+                          {m.icon || m.name.charAt(0)}
+                        </div>
+                      )}
                     </div>
                   </div>
-                  <span className="font-body-md" style={{ fontWeight: 600, fontSize: 13 }}>{m.name}</span>
-                  <span className="font-body-sm" style={{ color: "var(--on-surface-variant)", fontSize: 11 }}>{m.role || "عضو"}</span>
-                  <div style={{ display: "flex", alignItems: "center", gap: 3, marginTop: 2 }}>
-                    <span className="material-symbols-outlined filled-icon" style={{ fontSize: 14, color: "var(--tertiary)" }}>bolt</span>
-                    <span className="font-label-md" style={{ color: "var(--tertiary)", fontSize: 11, fontWeight: 700 }}>{pct}%</span>
+                  <div className="text-center">
+                    <p className="font-body-md" style={{ fontWeight: 700, fontSize: 14 }}>{m.name}</p>
+                    <p className="font-label-md" style={{ fontSize: 12, color: "var(--on-surface-variant)" }}>{m.role || "عضو"}</p>
+                  </div>
+                  <div className="flex items-center gap-1" style={{ color: "var(--primary)" }}>
+                    <span className="material-symbols-outlined filled-icon" style={{ fontSize: 14 }}>bolt</span>
+                    <span className="font-label-md" style={{ fontSize: 12 }}>{pct}%</span>
                   </div>
                 </div>
               );
@@ -214,51 +227,50 @@ export default function Dashboard() {
       </div>
 
       {/* 4. Quick Actions */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }} className="anim4">
+      <div className="anim4">
+        <h2 className="font-headline-sm" style={{ marginBottom: 12, fontWeight: 700 }}>إجراءات سريعة</h2>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
         <button
           onClick={() => router.push("/tasks")}
           className="glass-card"
-          style={{
-            display: "flex", flexDirection: "column", alignItems: "center", gap: 8,
-            padding: 20, border: "none", cursor: "pointer", background: "var(--primary-container)", color: "#fff",
-          }}
+          style={{ display: "flex", alignItems: "center", gap: 12, padding: 16, border: "none", cursor: "pointer" }}
         >
-          <span className="material-symbols-outlined" style={{ fontSize: 28 }}>add_task</span>
-          <span className="font-body-md" style={{ fontWeight: 600 }}>إضافة مهمة</span>
+          <div style={{ width: 40, height: 40, borderRadius: 12, background: "var(--primary-container)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            <span className="material-symbols-outlined" style={{ fontSize: 20, color: "var(--on-primary-container)" }}>add_task</span>
+          </div>
+          <span className="font-body-md" style={{ fontWeight: 700, color: "var(--on-surface)", fontSize: 14 }}>إضافة مهمة</span>
         </button>
         <button
           onClick={() => router.push("/rewards")}
           className="glass-card"
-          style={{
-            display: "flex", flexDirection: "column", alignItems: "center", gap: 8,
-            padding: 20, border: "none", cursor: "pointer", background: "var(--tertiary-container)", color: "#fff",
-          }}
+          style={{ display: "flex", alignItems: "center", gap: 12, padding: 16, border: "none", cursor: "pointer" }}
         >
-          <span className="material-symbols-outlined" style={{ fontSize: 28 }}>card_giftcard</span>
-          <span className="font-body-md" style={{ fontWeight: 600 }}>إضافة مكافأة</span>
+          <div style={{ width: 40, height: 40, borderRadius: 12, background: "var(--tertiary-container)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            <span className="material-symbols-outlined" style={{ fontSize: 20, color: "var(--on-tertiary-container)" }}>card_giftcard</span>
+          </div>
+          <span className="font-body-md" style={{ fontWeight: 700, color: "var(--on-surface)", fontSize: 14 }}>إضافة مكافأة</span>
         </button>
         <button
           onClick={() => router.push("/calendar")}
           className="glass-card"
-          style={{
-            display: "flex", flexDirection: "column", alignItems: "center", gap: 8,
-            padding: 20, border: "none", cursor: "pointer", background: "var(--secondary-container)", color: "#fff",
-          }}
+          style={{ display: "flex", alignItems: "center", gap: 12, padding: 16, border: "none", cursor: "pointer" }}
         >
-          <span className="material-symbols-outlined" style={{ fontSize: 28 }}>calendar_today</span>
-          <span className="font-body-md" style={{ fontWeight: 600 }}>التقويم</span>
+          <div style={{ width: 40, height: 40, borderRadius: 12, background: "var(--secondary-container)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            <span className="material-symbols-outlined" style={{ fontSize: 20, color: "var(--on-secondary-container)" }}>calendar_today</span>
+          </div>
+          <span className="font-body-md" style={{ fontWeight: 700, color: "var(--on-surface)", fontSize: 14 }}>التقويم</span>
         </button>
         <button
           onClick={() => router.push("/family")}
           className="glass-card"
-          style={{
-            display: "flex", flexDirection: "column", alignItems: "center", gap: 8,
-            padding: 20, border: "none", cursor: "pointer", background: "var(--surface-container-high)", color: "var(--on-surface)",
-          }}
+          style={{ display: "flex", alignItems: "center", gap: 12, padding: 16, border: "none", cursor: "pointer" }}
         >
-          <span className="material-symbols-outlined" style={{ fontSize: 28 }}>family_history</span>
-          <span className="font-body-md" style={{ fontWeight: 600 }}>إدارة الأسرة</span>
+          <div style={{ width: 40, height: 40, borderRadius: 12, background: "var(--surface-container-highest)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            <span className="material-symbols-outlined" style={{ fontSize: 20, color: "var(--on-surface)" }}>family_history</span>
+          </div>
+          <span className="font-body-md" style={{ fontWeight: 700, color: "var(--on-surface)", fontSize: 14 }}>إدارة الأسرة</span>
         </button>
+        </div>
       </div>
 
       {/* 5. Today Tasks */}
@@ -290,7 +302,7 @@ export default function Dashboard() {
                 >
                   <div
                     style={{
-                      width: 28, height: 28, borderRadius: "50%", flexShrink: 0,
+                      width: 24, height: 24, borderRadius: 6, flexShrink: 0,
                       border: `2px solid ${isCompleted ? "var(--primary)" : "var(--outline)"}`,
                       background: isCompleted ? "var(--primary)" : "transparent",
                       display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer",
@@ -309,7 +321,7 @@ export default function Dashboard() {
                         className="chip"
                         style={{ fontSize: 10, padding: "2px 8px", background: "color-mix(in srgb, var(--primary) 12%, transparent)", color: "var(--primary)" }}
                       >
-                        {task.category}
+                        {taskCategoryLabels[task.category] || task.category}
                       </span>
                       <span className="font-body-sm" style={{ color: "var(--on-surface-variant)" }}>
                         {task.points} نقطة
@@ -340,21 +352,26 @@ export default function Dashboard() {
 
       {/* 6. Weekly Progress */}
       <div className="glass-card anim1" style={{ padding: 20 }}>
-        <h2 className="font-headline-sm" style={{ marginBottom: 16, fontWeight: 700 }}>التقدم الأسبوعي</h2>
-        <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", height: 120, gap: 8 }}>
+        <h2 className="font-headline-sm" style={{ marginBottom: 16, fontWeight: 700 }}>التقويم الأسبوعي</h2>
+        <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", height: 128, gap: 8 }}>
           {weekData.map((d, i) => {
             const h = maxWeek > 0 ? (d.count / maxWeek) * 100 : 0;
             return (
-              <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
-                <span className="font-label-md" style={{ fontSize: 11, color: "var(--on-surface-variant)" }}>{d.count}</span>
+              <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
                 <div
                   style={{
-                    width: "100%", maxWidth: 28, borderRadius: 8,
-                    height: `${Math.max(h, 8)}%`,
-                    background: i === weekData.length - 1 ? "var(--primary)" : "color-mix(in srgb, var(--primary) 30%, transparent)",
-                    transition: "height 0.3s ease",
+                    width: "100%", borderRadius: "8px 8px 0 0",
+                    height: `${Math.max(h, 4)}%`,
+                    position: "relative",
+                    background: "color-mix(in srgb, var(--primary) 20%, transparent)",
                   }}
-                />
+                >
+                  <div style={{
+                    position: "absolute", inset: 0, borderRadius: "8px 8px 0 0",
+                    background: "var(--primary)",
+                    height: `${Math.max(h, 4)}%`,
+                  }} />
+                </div>
                 <span className="font-label-md" style={{ fontSize: 12, color: "var(--on-surface-variant)" }}>{d.label}</span>
               </div>
             );
@@ -364,13 +381,13 @@ export default function Dashboard() {
 
       {/* 7. Recent Activities */}
       <div className="anim2">
-        <h2 className="font-headline-sm" style={{ marginBottom: 12, fontWeight: 700 }}>الأنشطة الأخيرة</h2>
+        <h2 className="font-headline-sm" style={{ marginBottom: 12, fontWeight: 700 }}>آخر النشاطات</h2>
         {state.completedTasks.length === 0 ? (
           <div className="glass-card" style={{ textAlign: "center", padding: 24 }}>
             <p className="font-body-sm" style={{ color: "var(--on-surface-variant)" }}>لا توجد أنشطة بعد</p>
           </div>
         ) : (
-          <div className="glass-card" style={{ padding: 16 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             {state.completedTasks
               .slice(-5)
               .reverse()
@@ -381,25 +398,15 @@ export default function Dashboard() {
                 return (
                   <div
                     key={`${ct.taskId}-${ct.memberId}-${ct.date}-${i}`}
-                    style={{ display: "flex", alignItems: "flex-start", gap: 12, marginBottom: i < 4 ? 14 : 0 }}
+                    style={{ display: "flex", alignItems: "center", gap: 12 }}
                   >
-                    <div style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "center" }}>
-                      <div
-                        style={{
-                          width: 10, height: 10, borderRadius: "50%",
-                          background: "var(--primary)", flexShrink: 0, marginTop: 4,
-                        }}
-                      />
-                      {i < 4 && <div style={{ width: 2, height: 24, background: "var(--outline)", opacity: 0.3, marginTop: 4 }} />}
-                    </div>
-                    <div style={{ flex: 1 }}>
-                      <p className="font-body-md" style={{ margin: 0, fontSize: 13, fontWeight: 500 }}>
-                        <strong>{member.name}</strong> أكملت <strong>{task.title}</strong>
-                      </p>
-                      <span className="font-body-sm" style={{ color: "var(--on-surface-variant)", fontSize: 11 }}>
-                        {ct.pointsEarned} نقطة · {ct.date}
-                      </span>
-                    </div>
+                    <div style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--primary)", flexShrink: 0 }} />
+                    <p className="font-body-sm" style={{ flex: 1, margin: 0 }}>
+                      أكمل <strong>{member.name}</strong> مهمة <strong>{task.title}</strong>
+                    </p>
+                    <span className="font-label-md" style={{ color: "var(--outline)", flexShrink: 0 }}>
+                      {ct.date}
+                    </span>
                   </div>
                 );
               })}
@@ -411,28 +418,33 @@ export default function Dashboard() {
       <div
         className="glass-card anim3"
         style={{
-          background: "linear-gradient(135deg, var(--primary), color-mix(in srgb, var(--secondary) 60%, var(--primary)))",
-          color: "#fff",
+          position: "relative",
+          overflow: "hidden",
+          background: "linear-gradient(135deg, color-mix(in srgb, var(--primary) 5%, transparent), color-mix(in srgb, var(--secondary) 5%, transparent))",
+          border: "2px solid color-mix(in srgb, var(--primary) 10%, transparent)",
           padding: 24,
-          textAlign: "center",
         }}
       >
-        <span className="material-symbols-outlined filled-icon" style={{ fontSize: 40, opacity: 0.8, marginBottom: 8, display: "block" }}>format_quote</span>
-        <p className="font-headline-sm" style={{ fontWeight: 700, fontSize: 18, margin: 0, lineHeight: 1.6 }}>
-          {state.tasks.filter((t) => t.active).length > 0
-            ? "إنما الأعمال بالنيات، كل مهمة تكملها تقرّب أسرتك من السعادة"
-            : "ابدأ بإضافة مهام لأسرتك وتابع تقدمهم يومياً"}
-        </p>
-        <button
-          onClick={() => router.push("/tasks")}
-          style={{
-            marginTop: 16, padding: "10px 28px", borderRadius: 24,
-            background: "rgba(255,255,255,0.2)", color: "#fff", border: "1px solid rgba(255,255,255,0.3)",
-            cursor: "pointer", fontWeight: 600, fontSize: 14, backdropFilter: "blur(8px)",
-          }}
-        >
-         بدأ اليوم
-        </button>
+        <div style={{ position: "relative", zIndex: 10, display: "flex", flexDirection: "column", gap: 16 }}>
+          <p className="font-headline-sm" style={{ fontWeight: 700, color: "var(--primary)", fontStyle: "italic", lineHeight: 1.6, margin: 0 }}>
+            &quot;استمروا... كل مهمة صغيرة تقربكم من هدفكم الكبير.&quot;
+          </p>
+          <button
+            onClick={() => router.push("/tasks")}
+            style={{
+              padding: "12px 32px", borderRadius: 24,
+              background: "var(--primary)", color: "#fff",
+              border: "none",
+              cursor: "pointer", fontWeight: 700, fontSize: 16,
+              boxShadow: "0 4px 14px color-mix(in srgb, var(--primary) 20%, transparent)",
+              width: "fit-content",
+            }}
+          >
+            بدأ اليوم
+          </button>
+        </div>
+        <div style={{ position: "absolute", bottom: -40, right: -40, width: 160, height: 160, borderRadius: "50%", background: "color-mix(in srgb, var(--primary) 10%, transparent)", filter: "blur(40px)" }} />
+        <div style={{ position: "absolute", top: -40, left: -40, width: 160, height: 160, borderRadius: "50%", background: "color-mix(in srgb, var(--secondary) 10%, transparent)", filter: "blur(40px)" }} />
       </div>
     </div>
   );
